@@ -1,8 +1,9 @@
 from flask import Flask, render_template, session, request, redirect, url_for,send_file
 from flask_session import Session
-from Crypto.Cipher import AES
+from Crypto.Cipher import AES, PKCS1_OAEP
 from Crypto.Random import get_random_bytes
 from Crypto.Util.Padding import pad,unpad
+from Crypto.PublicKey import RSA
 import joblib
 import hashlib
 import psycopg2
@@ -46,6 +47,8 @@ def logowanie_action():
 			else:
 				session['login'] = login
 				session['userid'] = haslo2[0][0]
+				if os.path.exists("./tmp"+login+"private.pem"):
+					os.remove("./tmp"+login+"private.pem")
 				return redirect("/")
 		return render_template("logowanie.html", msg=msg)	
 	return render_template("logowanie.html")
@@ -71,18 +74,32 @@ def rejestracja_action():
 		else:
 			dbConnection = dbConnect()
 			dbCursor = dbConnection.cursor()
+
 			dbCursor.execute("SELECT nazwa_uzytkownika FROM uzytkownik WHERE nazwa_uzytkownika = '{}';".format(login))
 			check = dbCursor.fetchall()
 			if len(check)!=0:
 				msg = "Istnieje już użytkownik o podanej nazwie"
 			else:
+				
+				key = RSA.generate(2048)
+				private_key = key.exportKey()
+				with open("./tmp"+login+"private.pem", "wb") as f:
+					f.write(private_key)
+				public_key = key.publickey().exportKey()
+				
 				haslo = hashlib.sha256(haslo.encode('utf-8')).hexdigest()
-				dbCursor.execute("INSERT INTO uzytkownik VALUES (default, '{}', '{}', CURRENT_DATE);".format(login,haslo))
+				dbCursor.execute('''INSERT INTO uzytkownik VALUES (default, %s, %s, %s, CURRENT_DATE)''', (login, haslo, public_key))
 				dbConnection.commit()
 				msg = "Konto utworzone prawidłowo"
 			dbCursor.close()
 			dbConnection.close()
-	return render_template("rejestracja.html", msg=msg)	
+	return render_template("witamy.html", msg=msg,filename="./tmp"+login+"private.pem")
+@app.route('/downloadrsa', methods=["POST"])
+def downloadrsa():
+	if not request:
+		return redirect("/")
+	return send_file(request.form['downloadrsa'])
+		
 @app.route('/wyloguj')
 def wyloguj():
 	session.clear()
@@ -113,6 +130,24 @@ def wyslijaction():
 				msg = "Adresat o nazwie {user} nie istnieje\n"
 			else:
 				dbCursor.execute('''INSERT INTO wiadomosc VALUES (default, %s, %s,%s,%s,0,0,CURRENT_DATE,null)''', (session['userid'], iduser, tytul, tresc))
+				dbConnection.commit()
+		dbCursor.close()
+		dbConnection.close()
+	if szyfr==1:
+		dbConnection = dbConnect()
+		dbCursor = dbConnection.cursor()
+		for user in adresaci:
+			dbCursor.execute("SELECT id_uzytkownika,klucz_publiczny FROM uzytkownik WHERE nazwa_uzytkownika = '{}';".format(user))
+			result = dbCursor.fetchall()
+			iduser = result[0][0]
+			public_key = bytes(result[0][1])
+			if len(result)==0:
+				msg = "Adresat o nazwie {user} nie istnieje\n"
+			else:
+				public_key = RSA.importKey(public_key)
+				cipher_rsa = PKCS1_OAEP.new(public_key)
+				tresc = cipher_rsa.encrypt(bytes(tresc,'utf-8'))
+				dbCursor.execute('''INSERT INTO wiadomosc VALUES (default, %s, %s,%s,%s,0,1,CURRENT_DATE,null)''', (session['userid'], iduser, tytul, tresc))
 				dbConnection.commit()
 		dbCursor.close()
 		dbConnection.close()
