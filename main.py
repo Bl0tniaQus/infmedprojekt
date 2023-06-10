@@ -47,8 +47,8 @@ def logowanie_action():
 			else:
 				session['login'] = login
 				session['userid'] = haslo2[0][0]
-				if os.path.exists("./tmp"+login+"private.pem"):
-					os.remove("./tmp"+login+"private.pem")
+				if os.path.exists("./tmp/"+login+"private.pem"):
+					os.remove("./tmp/"+login+"private.pem")
 				return redirect("/")
 		return render_template("logowanie.html", msg=msg)	
 	return render_template("logowanie.html")
@@ -83,7 +83,7 @@ def rejestracja_action():
 				
 				key = RSA.generate(2048)
 				private_key = key.exportKey()
-				with open("./tmp"+login+"private.pem", "wb") as f:
+				with open("./tmp/"+login+"private.pem", "wb") as f:
 					f.write(private_key)
 				public_key = key.publickey().exportKey()
 				
@@ -93,7 +93,7 @@ def rejestracja_action():
 				msg = "Konto utworzone prawidłowo"
 			dbCursor.close()
 			dbConnection.close()
-	return render_template("witamy.html", msg=msg,filename="./tmp"+login+"private.pem")
+	return render_template("witamy.html", msg=msg,filename="./tmp/"+login+"private.pem")
 @app.route('/downloadrsa', methods=["POST"])
 def downloadrsa():
 	if not request:
