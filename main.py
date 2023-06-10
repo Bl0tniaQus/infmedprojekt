@@ -80,7 +80,39 @@ def rejestracja_action():
 def wyloguj():
 	session.clear()
 	return redirect("/")
-	
+@app.route('/wyslij')
+def wyslij():
+	if 'login' not in session:
+		return redirect("/")
+	return render_template("wyslij.html")
+@app.route('/wyslijaction', methods=["POST"])
+def wyslijaction():
+	if 'login' not in session:
+		return redirect("/")
+	adresat = request.form["adresat"]
+	adresaci = adresat.split()
+	szyfr = int(request.form["szyfr"])
+	tresc = request.form["tresc"]
+	tytul = request.form["tytul"]
+	msg=""
+	if szyfr==0:
+		dbConnection = dbConnect()
+		dbCursor = dbConnection.cursor()
+		for user in adresaci:
+			tresc = bytes(tresc, 'utf-8')
+			print(tresc)
+
+			dbCursor.execute("SELECT id_uzytkownika FROM uzytkownik WHERE nazwa_uzytkownika = '{}';".format(user))
+			iduser = dbCursor.fetchall()[0]
+			if len(iduser)==0:
+				msg = "Adresat o nazwie {user} nie istnieje\n"
+			else:
+				dbCursor.execute('''INSERT INTO wiadomosc VALUES (default, %s, %s,%s,%s,0,0,CURRENT_DATE)''', (session['userid'], iduser, tytul, tresc))
+				#dbCursor.execute("INSERT INTO wiadomosc VALUES (default, '{}', '{}', '{}', 0,0,CURRENT_DATE);".format(session['userid'],iduser,tresc,))
+				dbConnection.commit()
+		dbCursor.close()
+		dbConnection.close()
+	return redirect("/")
 	
 if __name__ == "__main__":
     app.run(debug=True)
