@@ -1,5 +1,3 @@
-<script>
-
 window.onload = function()
 {
 	setInterval(function(){
@@ -18,5 +16,3 @@ window.onload = function()
 	
 	
 }
-
-</script>

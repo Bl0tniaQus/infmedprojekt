@@ -1,12 +1,19 @@
-from flask import Flask, render_template, session, request, redirect, url_for
+from flask import Flask, render_template, session, request, redirect, url_for,send_file
 from flask_session import Session
+from Crypto.Cipher import AES
+from Crypto.Random import get_random_bytes
+from Crypto.Util.Padding import pad,unpad
+import joblib
 import hashlib
 import psycopg2
+import os
+from werkzeug.utils import secure_filename
 def dbConnect():
     dbConnection = psycopg2.connect(host='localhost',database='infmed',user='postgres',password='postgres')
     return dbConnection
     
 app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = "./tmp/"
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
@@ -100,19 +107,53 @@ def wyslijaction():
 		dbCursor = dbConnection.cursor()
 		for user in adresaci:
 			tresc = bytes(tresc, 'utf-8')
-			print(tresc)
-
 			dbCursor.execute("SELECT id_uzytkownika FROM uzytkownik WHERE nazwa_uzytkownika = '{}';".format(user))
 			iduser = dbCursor.fetchall()[0]
 			if len(iduser)==0:
 				msg = "Adresat o nazwie {user} nie istnieje\n"
 			else:
-				dbCursor.execute('''INSERT INTO wiadomosc VALUES (default, %s, %s,%s,%s,0,0,CURRENT_DATE)''', (session['userid'], iduser, tytul, tresc))
-				#dbCursor.execute("INSERT INTO wiadomosc VALUES (default, '{}', '{}', '{}', 0,0,CURRENT_DATE);".format(session['userid'],iduser,tresc,))
+				dbCursor.execute('''INSERT INTO wiadomosc VALUES (default, %s, %s,%s,%s,0,0,CURRENT_DATE,null)''', (session['userid'], iduser, tytul, tresc))
+				dbConnection.commit()
+		dbCursor.close()
+		dbConnection.close()
+	if szyfr==2:
+		keyfile = request.files["kluczaes"]
+		nazwa_pliku = secure_filename(keyfile.filename)
+		keyfile.save(app.config['UPLOAD_FOLDER']+nazwa_pliku)
+		key = joblib.load('./tmp/'+nazwa_pliku)
+		os.remove(app.config['UPLOAD_FOLDER'] + nazwa_pliku)
+		iv = get_random_bytes(16)
+		aes = AES.new(key, AES.MODE_CBC, iv)
+		tresc = aes.encrypt(pad(bytes(tresc,'utf-8'),16))
+		
+		dbConnection = dbConnect()
+		dbCursor = dbConnection.cursor()
+		for user in adresaci:
+			dbCursor.execute("SELECT id_uzytkownika FROM uzytkownik WHERE nazwa_uzytkownika = '{}';".format(user))
+			iduser = dbCursor.fetchall()[0]
+			if len(iduser)==0:
+				msg = "Adresat o nazwie {user} nie istnieje\n"
+			else:
+				#aes = AES.new(key, AES.MODE_CBC, iv)
+				#xd = unpad(aes.decrypt(tresc),16).decode('utf-8')
+				dbCursor.execute('''INSERT INTO wiadomosc VALUES (default, %s, %s,%s,%s,0,2,CURRENT_DATE,%s)''', (session['userid'], iduser, tytul, tresc,iv))
 				dbConnection.commit()
 		dbCursor.close()
 		dbConnection.close()
 	return redirect("/")
-	
+@app.route("/profil")
+def profil():
+	if 'login' not in session:
+		return redirect("/")
+	return render_template("profil.html")
+@app.route("/downloadaes")
+def downloadaes():
+	if 'login' not in session:
+		return redirect("/")
+	if os.path.exists('./tmp/aeskey.key'):
+		os.remove('./tmp/aeskey.key')
+	key = get_random_bytes(16)
+	joblib.dump(key, './tmp/aeskey.key')
+	return send_file('./tmp/aeskey.key')
 if __name__ == "__main__":
     app.run(debug=True)
