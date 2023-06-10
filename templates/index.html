@@ -7,8 +7,22 @@
 <body>
 
 Strona główna
-<a href="/rejestracja">Rejestracja</a>
-<a href="/logowanie">Logowanie</a>
+ {% if session['login'] %}
+	  <a href="/profil"><li><p>{{session['login']}}</p>
+	  <ul>
+	  <a href="/profil"><li id="wylog">Profil</li></a>
+	  
+	  <a href="/wyniki"><li id="wylog">Wyniki</li></a>
+	   
+	  <a href="/wyloguj"><li>Wyloguj się</li></a>
+	   
+	  </ul>	</li></a>  
+
+	  {% else %}
+	  <a href="/logowanie"><li>Zaloguj się</li></a>
+	  <a href="/rejestracja"><li>Rejestracja</li></a>
+	  {% endif %}
+
 
 </body>
 </html>

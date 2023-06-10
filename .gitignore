@@ -2,10 +2,10 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
+tmp/
 # C extensions
 *.so
-
+flask_session/
 # Distribution / packaging
 .Python
 build/

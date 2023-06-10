@@ -1,0 +1,14 @@
+<form action="wyslijaction" method="post" enctype=multipart/form-data>
+	
+	Adresaci: <input type="text" name="adresat"/>
+	Tytuł: <input type="text" name="tytul"/>
+	Szyfrowanie: <input type="radio" name="szyfr" value="0" checked="checked">Brak
+	 <input type="radio" name="szyfr" value="1">RSA 
+	 <input type="radio" name="szyfr" value="2" id="aes">AES
+	 <span style="visibility:hidden;"id="kluczaes">Klucz AES:<input type="file" name="kluczaes"/></span>
+	 Załącznik: <input type="file" name="zalacznik" />
+	 Treść: <textarea name="tresc"></textarea>
+	 <button type="submit" name="wyslij">Wyślij</button>
+</form>
+<script src="{{ url_for('static', filename='showaes.js') }}"></script>
+
