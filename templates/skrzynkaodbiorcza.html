@@ -1,7 +1,7 @@
 <div><ul>
 <form method="post" action="/wiadomosc">
 			{% for i in range(dl) %}
-				<li id="wiadomosc_{{wiadomosci[i][0]}}">{{wiadomosci[i][3]}} {{wiadomosci[i][7]}} {{wiadomosci[i][9]}}<button type="submit" value="{{wiadomosci[i][0]}}" name="wiadomosc">Podgląd</button></li>
+				<li id="wiadomosc_{{wiadomosci[i][0]}}">{{wiadomosci[i][3]}} {{wiadomosci[i][7]}} {{wiadomosci[i][10]}}<button type="submit" value="{{wiadomosci[i][0]}}" name="wiadomosc">Podgląd</button></li>
 			{% endfor %}
 		</ul></div>
 </form>
