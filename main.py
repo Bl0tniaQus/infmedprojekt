@@ -93,7 +93,9 @@ def rejestracja_action():
 				msg = "Konto utworzone prawidłowo"
 			dbCursor.close()
 			dbConnection.close()
-	return render_template("witamy.html", msg=msg,filename="./tmp/"+login+"private.pem")
+			return render_template("witamy.html", msg=msg,filename="./tmp/"+login+"private.pem")
+	return render_template("rejestracja.html", msg=msg)
+	
 @app.route('/downloadrsa', methods=["POST"])
 def downloadrsa():
 	if not request:
@@ -169,8 +171,6 @@ def wyslijaction():
 			if len(iduser)==0:
 				msg = "Adresat o nazwie {user} nie istnieje\n"
 			else:
-				#aes = AES.new(key, AES.MODE_CBC, iv)
-				#xd = unpad(aes.decrypt(tresc),16).decode('utf-8')
 				dbCursor.execute('''INSERT INTO wiadomosc VALUES (default, %s, %s,%s,%s,0,2,CURRENT_DATE,%s)''', (session['userid'], iduser, tytul, tresc,iv))
 				dbConnection.commit()
 		dbCursor.close()
@@ -190,5 +190,93 @@ def downloadaes():
 	key = get_random_bytes(16)
 	joblib.dump(key, './tmp/aeskey.key')
 	return send_file('./tmp/aeskey.key')
+@app.route("/skrzynkaodbiorcza")
+def skrzynkaodbiorcza():
+	if 'login' not in session:
+		return redirect("/")
+	dbConnection = dbConnect()
+	dbCursor = dbConnection.cursor()
+	dbCursor.execute("SELECT id_wiadomosci,autor,adresat,tytul,tresc,zalacznik,szyfr,data_dodania,aesiv,nazwa_uzytkownika FROM wiadomosc INNER JOIN uzytkownik on id_uzytkownika=autor WHERE adresat = '{}' ORDER BY data_dodania DESC,id_wiadomosci DESC;".format(session['userid']))
+	wiadomosci = dbCursor.fetchall()
+	dbCursor.close()
+	dbConnection.close()
+	return render_template("skrzynkaodbiorcza.html", wiadomosci=wiadomosci,dl = len(wiadomosci))
+@app.route("/wiadomosc", methods=["POST"])
+def wiadomosc():
+	if 'login' not in session or request.method !="POST":
+		return redirect("/")
+	dbConnection = dbConnect()
+	dbCursor = dbConnection.cursor()
+	dbCursor.execute("SELECT id_wiadomosci,autor,adresat,tytul,tresc,zalacznik,szyfr,data_dodania,aesiv,nazwa_uzytkownika FROM wiadomosc INNER JOIN uzytkownik on id_uzytkownika=autor WHERE id_wiadomosci = '{}';".format(request.form['wiadomosc']))
+	wiad = dbCursor.fetchall()
+	wiadomosc = []
+	for x in wiad[0]:
+		wiadomosc.append(x)
+	if wiadomosc[2]!=session['userid']:
+		return redirect("/")
+	if wiadomosc[6]==0:
+		wiadomosc[4]=bytes(wiadomosc[4]).decode('utf-8')
+	return render_template("wiadomosc.html", wiadomosc=wiadomosc)
+@app.route("/wiadomoscrsa", methods=["POST"])
+def wiadomoscrsa():
+	if 'login' not in session or request.method !="POST":
+		return redirect("/")
+	dec=0
+	msg=""
+	dbConnection = dbConnect()
+	dbCursor = dbConnection.cursor()
+	dbCursor.execute("SELECT id_wiadomosci,autor,adresat,tytul,tresc,zalacznik,szyfr,data_dodania,aesiv,nazwa_uzytkownika FROM wiadomosc INNER JOIN uzytkownik on id_uzytkownika=autor WHERE id_wiadomosci = '{}';".format(request.form['rsa']))
+	wiad = dbCursor.fetchall()
+	wiadomosc = []
+	for x in wiad[0]:
+		wiadomosc.append(x)
+	if wiadomosc[2]!=session['userid']:
+		return redirect("/")
+	if wiadomosc[6]==1:
+		try:
+			keyfile = request.files["rsakey"]
+			nazwa_pliku = secure_filename(keyfile.filename)
+			keyfile.save(app.config['UPLOAD_FOLDER']+nazwa_pliku)
+			with open(app.config['UPLOAD_FOLDER']+nazwa_pliku, "r") as f:
+				key = f.read()
+			os.remove(app.config['UPLOAD_FOLDER'] + nazwa_pliku)
+			wiadomosc[4]=bytes(wiadomosc[4])
+			privatekey = RSA.importKey(key)
+			cipher_rsa = PKCS1_OAEP.new(privatekey)
+			wiadomosc[4] = cipher_rsa.decrypt(wiadomosc[4])
+			wiadomosc[4] = wiadomosc[4].decode('utf-8')
+			dec=1
+		except:
+			msg = "Niepoprawny klucz"
+	return render_template("wiadomosc.html",wiadomosc=wiadomosc,msg=msg,dec=dec)
+@app.route("/wiadomoscaes", methods=["POST"])
+def wiadomoscaes():
+	if 'login' not in session or request.method !="POST":
+		return redirect("/")
+	dec=0
+	msg=""
+	dbConnection = dbConnect()
+	dbCursor = dbConnection.cursor()
+	dbCursor.execute("SELECT id_wiadomosci,autor,adresat,tytul,tresc,zalacznik,szyfr,data_dodania,aesiv,nazwa_uzytkownika FROM wiadomosc INNER JOIN uzytkownik on id_uzytkownika=autor WHERE id_wiadomosci = '{}';".format(request.form['aes']))
+	wiad = dbCursor.fetchall()
+	wiadomosc = []
+	for x in wiad[0]:
+		wiadomosc.append(x)
+	if wiadomosc[2]!=session['userid']:
+		return redirect("/")
+	if wiadomosc[6]==2:
+		try:
+			keyfile = request.files["aeskey"]
+			nazwa_pliku = secure_filename(keyfile.filename)
+			keyfile.save(app.config['UPLOAD_FOLDER']+nazwa_pliku)
+			key = joblib.load(app.config['UPLOAD_FOLDER'] + nazwa_pliku)
+			os.remove(app.config['UPLOAD_FOLDER'] + nazwa_pliku)
+			wiadomosc[4]=bytes(wiadomosc[4])
+			aes = AES.new(key, AES.MODE_CBC, bytes(wiadomosc[8]))
+			wiadomosc[4] = unpad(aes.decrypt(wiadomosc[4]),16).decode('utf-8')
+			dec=1
+		except:
+			msg = "Niepoprawny klucz"
+	return render_template("wiadomosc.html",wiadomosc=wiadomosc,msg=msg,dec=dec)
 if __name__ == "__main__":
     app.run(debug=True)
