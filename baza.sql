@@ -30,6 +30,5 @@ id_zalacznika serial primary key,
 id_wiadomosci integer not null,
 zalacznik bytea not null,
 nazwa_pliku varchar(256) not null,
-szyfr integer not null,
 CONSTRAINT fk_zalacznik FOREIGN KEY(id_wiadomosci) REFERENCES wiadomosc(id_wiadomosci) 
 );

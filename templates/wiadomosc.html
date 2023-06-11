@@ -17,6 +17,9 @@ Podaj swój klucz prywatny aby odczytać treść:
 </form>
 {% elif wiadomosc[6]==1 and dec==1%}
 {{wiadomosc[4]}}
+{% if zal[0]==1 %}
+	Załącznik: {{zal[1]}} <form action="pobierz" method="post"><button type="submit" name="pobierz" value="{{wiadomosc[0]}}">Pobierz</button></form>
+	{% endif %}
 {% elif wiadomosc[6]==2 and dec!=1%}
 Wiadomość zabezpieczona algorytmem AES
 Podaj klucz adresata wiadomości aby odczytać treść
@@ -24,5 +27,8 @@ Podaj klucz adresata wiadomości aby odczytać treść
 <input type="file" name="aeskey"/><button type="submit" name="aes" value="{{wiadomosc[0]}}">Prześlij</button>
 </form>
 {% elif wiadomosc[6]==2 and dec==1%}
+{% if zal[0]==1 %}
+	Załącznik: {{zal[1]}} <form action="pobierz" method="post"><button type="submit" name="pobierz" value="{{wiadomosc[0]}}">Pobierz</button></form>
+	{% endif %}
 {{wiadomosc[4]}}
 {% endif %}

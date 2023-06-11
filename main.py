@@ -12,7 +12,11 @@ from werkzeug.utils import secure_filename
 def dbConnect():
     dbConnection = psycopg2.connect(host='localhost',database='infmed',user='postgres',password='postgres')
     return dbConnection
-    
+def cleantmp(login):
+	if os.path.exists("./tmp/"+login+"private.pem"):
+		os.remove("./tmp/"+login+"private.pem")
+	if os.path.exists('./tmp/'+login):
+		shutil.rmtree('./tmp/'+login) 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = "./tmp/"
 app.config["SESSION_PERMANENT"] = False
@@ -21,6 +25,8 @@ Session(app)
 
 @app.route('/')
 def index():
+	if 'login' in session:
+		return redirect("/skrzynkaodbiorcza")
 	return render_template("index.html")
 @app.route('/logowanie')
 def logowanie():
@@ -47,10 +53,7 @@ def logowanie_action():
 			else:
 				session['login'] = login
 				session['userid'] = haslo2[0][0]
-				if os.path.exists("./tmp/"+login+"private.pem"):
-					os.remove("./tmp/"+login+"private.pem")
-				if os.path.exists('./tmp/'+login):
-					shutil.rmtree('./tmp/'+login)
+				cleantmp(login)
 				return redirect("/")
 		return render_template("logowanie.html", msg=msg)	
 	return render_template("logowanie.html")
@@ -106,7 +109,9 @@ def downloadrsa():
 		
 @app.route('/wyloguj')
 def wyloguj():
-	session.clear()
+	if 'login' in session:
+		cleantmp(session['login'])
+		session.clear()
 	return redirect("/")
 @app.route('/wyslij')
 def wyslij():
@@ -138,7 +143,7 @@ def wyslijaction():
 			else:
 				dbCursor.execute('''INSERT INTO wiadomosc VALUES (default, %s, %s,%s,%s,%s,0,CURRENT_DATE,null) RETURNING id_wiadomosci''', (session['userid'], iduser, tytul, tresc,zal))
 				idwiad = dbCursor.fetchall()[0]
-				if 'zalacznik' in request.files:
+				if request.files['zalacznik'].filename!="":
 					zalacznik = request.files['zalacznik'].read()
 					nazwa_pliku = secure_filename(request.files['zalacznik'].filename)
 					dbCursor.execute('''INSERT INTO zalacznik VALUES (default, %s, %s,%s,%s)''', (idwiad, bytes(zalacznik), nazwa_pliku, 0))
@@ -166,7 +171,7 @@ def wyslijaction():
 				aeskey2 = cipher_rsa.encrypt(aeskey)
 				dbCursor.execute('''INSERT INTO wiadomosc VALUES (default, %s, %s,%s,%s,%s,1,CURRENT_DATE,%s,%s) RETURNING id_wiadomosci''', (session['userid'], iduser, tytul, tresc,zal,iv,aeskey2))
 				idwiad = dbCursor.fetchall()[0]
-				if 'zalacznik' in request.files:
+				if request.files['zalacznik'].filename!="":
 					zalacznik = request.files['zalacznik'].read()
 					zalacznik = aes.encrypt(pad(zalacznik,16))
 					nazwa_pliku = secure_filename(request.files['zalacznik'].filename)
@@ -175,6 +180,8 @@ def wyslijaction():
 		dbCursor.close()
 		dbConnection.close()
 	if szyfr==2:
+		dbConnection = dbConnect()
+		dbCursor = dbConnection.cursor()
 		try:
 			keyfile = request.files["kluczaes"]
 			nazwa_pliku = secure_filename(keyfile.filename)
@@ -184,8 +191,6 @@ def wyslijaction():
 			iv = get_random_bytes(16)
 			aes = AES.new(key, AES.MODE_CBC, iv)
 			tresc = aes.encrypt(pad(bytes(tresc,'utf-8'),16))
-			dbConnection = dbConnect()
-			dbCursor = dbConnection.cursor()
 			for user in adresaci:
 				dbCursor.execute("SELECT id_uzytkownika FROM uzytkownik WHERE nazwa_uzytkownika = '{}';".format(user))
 				iduser = dbCursor.fetchall()[0]
@@ -194,7 +199,7 @@ def wyslijaction():
 				else:
 					dbCursor.execute('''INSERT INTO wiadomosc VALUES (default, %s, %s,%s,%s,%s,2,CURRENT_DATE,%s) RETURNING id_wiadomosci''', (session['userid'], iduser, tytul, tresc,zal,iv))
 					idwiad = dbCursor.fetchall()[0]
-					if 'zalacznik' in request.files:
+					if request.files['zalacznik'].filename!="":
 						zalacznik = request.files['zalacznik'].read()
 						zalacznik = aes.encrypt(pad(zalacznik,16))
 						nazwa_pliku = secure_filename(request.files['zalacznik'].filename)
@@ -223,6 +228,8 @@ def downloadaes():
 def skrzynkaodbiorcza():
 	if 'login' not in session:
 		return redirect("/")
+	if 'login' in session:
+		cleantmp(session['login'])
 	dbConnection = dbConnect()
 	dbCursor = dbConnection.cursor()
 	dbCursor.execute("SELECT id_wiadomosci,autor,adresat,tytul,tresc,zalacznik,szyfr,data_dodania,aesiv,aesrsa,nazwa_uzytkownika FROM wiadomosc INNER JOIN uzytkownik on id_uzytkownika=autor WHERE adresat = '{}' ORDER BY data_dodania DESC,id_wiadomosci DESC;".format(session['userid']))
@@ -247,10 +254,14 @@ def wiadomosc():
 		return redirect("/")
 	if wiadomosc[6]==0:
 		if len(zal)!=0:
+			for x in zal[0]:
+				zalacznik.append(x)
 			zal = [1, zal[0][3]]
 		else:
-			zal = None
+			zal = []
 		wiadomosc[4]=bytes(wiadomosc[4]).decode('utf-8')
+	dbCursor.close()
+	dbConnection.close()
 	return render_template("wiadomosc.html", wiadomosc=wiadomosc, zal=zal)
 @app.route("/wiadomoscrsa", methods=["POST"])
 def wiadomoscrsa():
@@ -262,12 +273,23 @@ def wiadomoscrsa():
 	dbCursor = dbConnection.cursor()
 	dbCursor.execute("SELECT id_wiadomosci,autor,adresat,tytul,tresc,zalacznik,szyfr,data_dodania,aesiv,aesrsa,nazwa_uzytkownika FROM wiadomosc INNER JOIN uzytkownik on id_uzytkownika=autor WHERE id_wiadomosci = '{}';".format(request.form['rsa']))
 	wiad = dbCursor.fetchall()
+	dbCursor.execute("SELECT * from zalacznik WHERE id_wiadomosci = {}".format(request.form['rsa']))
+	zal = dbCursor.fetchall()
 	wiadomosc = []
+	zalacznik = []
 	for x in wiad[0]:
 		wiadomosc.append(x)
+	for x in zal[0]:
+		zalacznik.append(x)
 	if wiadomosc[2]!=session['userid']:
 		return redirect("/")
 	if wiadomosc[6]==1:
+		if len(zal)!=0:
+			for x in zal[0]:
+				zalacznik.append(x)
+			zal = [1, zal[0][3]]
+		else:
+			zal = []
 		try:
 			aesrsa = bytes(wiadomosc[9])
 			keyfile = request.files["rsakey"]
@@ -282,10 +304,20 @@ def wiadomoscrsa():
 			aeskey = cipher_rsa.decrypt(aesrsa)
 			aes = AES.new(aeskey, AES.MODE_CBC, bytes(wiadomosc[8]))
 			wiadomosc[4] = unpad(aes.decrypt(wiadomosc[4]),16).decode('utf-8')
+			if len(zal)!=0:
+				zalacznik[2] = unpad(aes.decrypt(bytes(zalacznik[2])),16)
+				if not os.path.exists('./tmp/'+session['login']):
+					os.mkdir('./tmp/'+session['login'])
+				if os.path.exists('./tmp/'+session['login']+'/'+zalacznik[3]):
+					os.remove('./tmp/'+session['login']+'/'+zalacznik[3])
+				with open('./tmp/'+session['login']+'/'+zalacznik[3], "wb") as f:
+					f.write(zalacznik[2])
 			dec=1
 		except:
 			msg = "Niepoprawny klucz"
-	return render_template("wiadomosc.html",wiadomosc=wiadomosc,msg=msg,dec=dec)
+	dbCursor.close()
+	dbConnection.close()
+	return render_template("wiadomosc.html",wiadomosc=wiadomosc,msg=msg,dec=dec, zal=zal)
 @app.route("/wiadomoscaes", methods=["POST"])
 def wiadomoscaes():
 	if 'login' not in session or request.method !="POST":
@@ -297,24 +329,43 @@ def wiadomoscaes():
 	dbCursor.execute("SELECT id_wiadomosci,autor,adresat,tytul,tresc,zalacznik,szyfr,data_dodania,aesiv,nazwa_uzytkownika FROM wiadomosc INNER JOIN uzytkownik on id_uzytkownika=autor WHERE id_wiadomosci = '{}';".format(request.form['aes']))
 	wiad = dbCursor.fetchall()
 	wiadomosc = []
+	dbCursor.execute("SELECT * from zalacznik WHERE id_wiadomosci = {}".format(request.form['aes']))
+	zal = dbCursor.fetchall()
+	zalacznik = []
 	for x in wiad[0]:
 		wiadomosc.append(x)
 	if wiadomosc[2]!=session['userid']:
 		return redirect("/")
 	if wiadomosc[6]==2:
-		try:
-			keyfile = request.files["aeskey"]
-			nazwa_pliku = secure_filename(keyfile.filename)
-			keyfile.save(app.config['UPLOAD_FOLDER']+nazwa_pliku)
-			key = joblib.load(app.config['UPLOAD_FOLDER'] + nazwa_pliku)
-			os.remove(app.config['UPLOAD_FOLDER'] + nazwa_pliku)
-			wiadomosc[4]=bytes(wiadomosc[4])
-			aes = AES.new(key, AES.MODE_CBC, bytes(wiadomosc[8]))
-			wiadomosc[4] = unpad(aes.decrypt(wiadomosc[4]),16).decode('utf-8')
-			dec=1
-		except:
-			msg = "Niepoprawny klucz"
-	return render_template("wiadomosc.html",wiadomosc=wiadomosc,msg=msg,dec=dec)
+		if len(zal)!=0:
+			for x in zal[0]:
+				zalacznik.append(x)
+			zal = [1, zal[0][3]]
+		else:
+			zal = []
+		#try:
+		keyfile = request.files["aeskey"]
+		nazwa_pliku = secure_filename(keyfile.filename)
+		keyfile.save(app.config['UPLOAD_FOLDER']+nazwa_pliku)
+		key = joblib.load(app.config['UPLOAD_FOLDER'] + nazwa_pliku)
+		os.remove(app.config['UPLOAD_FOLDER'] + nazwa_pliku)
+		wiadomosc[4]=bytes(wiadomosc[4])
+		aes = AES.new(key, AES.MODE_CBC, bytes(wiadomosc[8]))
+		wiadomosc[4] = unpad(aes.decrypt(wiadomosc[4]),16).decode('utf-8')
+		if len(zal)!=0:
+			zalacznik[2] = unpad(aes.decrypt(bytes(zalacznik[2])),16)
+			if not os.path.exists('./tmp/'+session['login']):
+				os.mkdir('./tmp/'+session['login'])
+			if os.path.exists('./tmp/'+session['login']+'/'+zalacznik[3]):
+				os.remove('./tmp/'+session['login']+'/'+zalacznik[3])
+			with open('./tmp/'+session['login']+'/'+zalacznik[3], "wb") as f:
+				f.write(zalacznik[2])
+		dec=1
+		#except:
+		#	msg = "Niepoprawny klucz"
+	dbCursor.close()
+	dbConnection.close()
+	return render_template("wiadomosc.html",wiadomosc=wiadomosc,msg=msg,dec=dec,zal=zal)
 @app.route("/pobierz", methods=["POST"])
 def pobierz():
 	if 'login' not in session or request.method !="POST":
@@ -334,8 +385,14 @@ def pobierz():
 		os.mkdir('./tmp/'+session['login'])
 	if os.path.exists('./tmp/'+session['login']+'/'+zalacznik[3]):
 		os.remove('./tmp/'+session['login']+'/'+zalacznik[3])
-	with open('./tmp/'+session['login']+'/'+zalacznik[3], "wb") as f:
-					f.write(bytes(zalacznik[2]))
+	if not os.path.exists('./tmp/'+session['login']+'/'+zalacznik[3]):
+		with open('./tmp/'+session['login']+'/'+zalacznik[3], "wb") as f:
+			f.write(bytes(zalacznik[2]))
+	dbCursor.close()
+	dbConnection.close()
 	return send_file('./tmp/'+session['login']+'/'+zalacznik[3], as_attachment=True)
+
+	
+
 if __name__ == "__main__":
     app.run(debug=True)
