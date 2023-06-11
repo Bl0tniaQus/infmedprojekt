@@ -7,7 +7,7 @@ from Crypto.PublicKey import RSA
 import joblib
 import hashlib
 import psycopg2
-import os
+import os,shutil
 from werkzeug.utils import secure_filename
 def dbConnect():
     dbConnection = psycopg2.connect(host='localhost',database='infmed',user='postgres',password='postgres')
@@ -49,6 +49,8 @@ def logowanie_action():
 				session['userid'] = haslo2[0][0]
 				if os.path.exists("./tmp/"+login+"private.pem"):
 					os.remove("./tmp/"+login+"private.pem")
+				if os.path.exists('./tmp/'+login):
+					shutil.rmtree('./tmp/'+login)
 				return redirect("/")
 		return render_template("logowanie.html", msg=msg)	
 	return render_template("logowanie.html")
@@ -236,14 +238,20 @@ def wiadomosc():
 	dbCursor = dbConnection.cursor()
 	dbCursor.execute("SELECT id_wiadomosci,autor,adresat,tytul,tresc,zalacznik,szyfr,data_dodania,aesiv,aesrsa,nazwa_uzytkownika FROM wiadomosc INNER JOIN uzytkownik on id_uzytkownika=autor WHERE id_wiadomosci = '{}';".format(request.form['wiadomosc']))
 	wiad = dbCursor.fetchall()
+	dbCursor.execute("SELECT * from zalacznik WHERE id_wiadomosci = {}".format(request.form['wiadomosc']))
+	zal = dbCursor.fetchall()
 	wiadomosc = []
 	for x in wiad[0]:
 		wiadomosc.append(x)
 	if wiadomosc[2]!=session['userid']:
 		return redirect("/")
 	if wiadomosc[6]==0:
+		if len(zal)!=0:
+			zal = [1, zal[0][3]]
+		else:
+			zal = None
 		wiadomosc[4]=bytes(wiadomosc[4]).decode('utf-8')
-	return render_template("wiadomosc.html", wiadomosc=wiadomosc)
+	return render_template("wiadomosc.html", wiadomosc=wiadomosc, zal=zal)
 @app.route("/wiadomoscrsa", methods=["POST"])
 def wiadomoscrsa():
 	if 'login' not in session or request.method !="POST":
@@ -307,5 +315,27 @@ def wiadomoscaes():
 		except:
 			msg = "Niepoprawny klucz"
 	return render_template("wiadomosc.html",wiadomosc=wiadomosc,msg=msg,dec=dec)
+@app.route("/pobierz", methods=["POST"])
+def pobierz():
+	if 'login' not in session or request.method !="POST":
+		return redirect("/")
+	dbConnection = dbConnect()
+	dbCursor = dbConnection.cursor()
+	dbCursor.execute("SELECT * FROM zalacznik WHERE id_wiadomosci = '{}';".format(request.form['pobierz']))
+	zal = dbCursor.fetchall()
+	dbCursor.execute("SELECT adresat FROM wiadomosc WHERE id_wiadomosci = '{}'".format(request.form['pobierz']))
+	userid = dbCursor.fetchone()
+	zalacznik = []
+	for x in zal[0]:
+		zalacznik.append(x)
+	if userid[0]!=session['userid']:
+		return redirect("/")
+	if not os.path.exists('./tmp/'+session['login']):
+		os.mkdir('./tmp/'+session['login'])
+	if os.path.exists('./tmp/'+session['login']+'/'+zalacznik[3]):
+		os.remove('./tmp/'+session['login']+'/'+zalacznik[3])
+	with open('./tmp/'+session['login']+'/'+zalacznik[3], "wb") as f:
+					f.write(bytes(zalacznik[2]))
+	return send_file('./tmp/'+session['login']+'/'+zalacznik[3], as_attachment=True)
 if __name__ == "__main__":
     app.run(debug=True)

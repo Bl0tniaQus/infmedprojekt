@@ -6,6 +6,9 @@ Data: {{wiadomosc[7]}}
 <br />
 {% if wiadomosc[6]==0 %}
 {{wiadomosc[4]}}
+	{% if zal[0]==1 %}
+	Załącznik: {{zal[1]}} <form action="pobierz" method="post"><button type="submit" name="pobierz" value="{{wiadomosc[0]}}">Pobierz</button></form>
+	{% endif %}
 {% elif wiadomosc[6]==1 and dec!=1%}
 Wiadomość zabezpieczona algorytmem RSA
 Podaj swój klucz prywatny aby odczytać treść: 
