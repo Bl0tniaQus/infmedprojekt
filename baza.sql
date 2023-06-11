@@ -20,6 +20,7 @@ CREATE TABLE wiadomosc (
 	szyfr integer not null,
     data_dodania DATE NOT NULL,
     aesiv bytea,
+	aesrsa bytea,
     CONSTRAINT fk_wiadomosc_autor FOREIGN KEY(autor) REFERENCES uzytkownik(id_uzytkownika),
     CONSTRAINT fk_wiadomosc_adresat FOREIGN KEY(adresat) REFERENCES uzytkownik(id_uzytkownika)  
 );
