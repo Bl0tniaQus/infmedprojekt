@@ -19,6 +19,7 @@ CREATE TABLE wiadomosc (
 	zalacznik integer,
 	szyfr integer not null,
     data_dodania DATE NOT NULL,
+	godzina_dodania TIME(0) NOT NULL,
     aesiv bytea,
 	aesrsa bytea,
     CONSTRAINT fk_wiadomosc_autor FOREIGN KEY(autor) REFERENCES uzytkownik(id_uzytkownika),
