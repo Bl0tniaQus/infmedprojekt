@@ -2,31 +2,25 @@
 <img id="logomale" width="100" src="../static/logo.png"/>
 	<ul>
 	  <li><a href="/profil">{{session['login']}}</a></li>
-	  <li><a href="/skrzynkaodbiorcza">skrzynka odbiorcza</a></li>
-	  <li><a href="/wyslij">wyslij maila</a></li>
-	  <li><a href="/wyloguj">wyloguj</a></li>
+	  <li><a href="/skrzynkaodbiorcza">Skrzynka odbiorcza</a></li>
+	  <li><a href="/skrzynkanadawcza">Skrzynka nadawcza</a></li>
+	  <li><a href="/wyslij">Wyslij maila</a></li>
+	  <li><a href="/wyloguj">Wyloguj</a></li>
 	</ul>
 	  <hr>
+	   <h1 style="color:#0b2a80;">Skrzynka nadawcza</h1>
 <div>
-
-		<ul class="listawiadomosci">
+<form method="post" action="/usunnad" style="">
+		<ul class="listawiadomosci" style="padding-top:0;">
 			<table class="tabelawiadomosci">
-				<tr style="background-color:#0b2a80;color:#e1e8fc;"><td  class="td1">Temat maila</td><td class="td2">Data odbioru</td><td class="td3">Nadawca</td></tr>
+				<tr style="background-color:#0b2a80;color:#e1e8fc;"><td  class="td1">Temat maila</td><td class="td2">Data odbioru</td><td class="td3">Nadawca</td><td class="td3">Godzina</td><td class="td3">Szyfrowanie</td><td>Załącznik</td></tr>
 			{% for i in range(dl) %}	
-				<li id="wiadomosc_{{wiadomosci[i][0]}}"><tr><td  class="td1">{{wiadomosci[i][3]}}</td><td class="td2">{{wiadomosci[i][7]}} </td> <td class="td3">{{wiadomosci[i][10]}}</td>
-			    </tr></li>
-					
-					<form method="post" action="/usunnad" style="">
-					<button class="buttonmini" type="submit" value="{{wiadomosci[i][0]}}" name="wiadomosc">Usuń</button>
-					</form>
-			Godzina: {{wiadomosci[i][8]}}<br/>
-			Szyfr: {% if wiadomosci[i][6] ==1 %} RSA {% elif wiadomosci[i][6]==2 %} AES {% endif %} 
-			Załącznik: {% if wiadomosci[i][5]==1 %} Tak {% endif %}
-			
-					
+				<li id="wiadomosc_{{wiadomosci[i][0]}}"><tr><td  class="td1">{{wiadomosci[i][3]}}</td><td class="td2">{{wiadomosci[i][7]}} </td> <td class="td3">{{wiadomosci[i][10]}}</td><td class="td5">{{wiadomosci[i][8]}}</td><td class="td5">{% if wiadomosci[i][6] ==1 %} RSA {% elif wiadomosci[i][6]==2 %} AES {% endif %} </td><td class="td6">{% if wiadomosci[i][5]==1 %} Tak {% endif %}</td><td class="td4"><button class="buttonmini" type="submit" value="{{wiadomosci[i][0]}}" name="wiadomosc">Usuń</button></td>
+			    </tr></li>			
 			{% endfor %}
+			
 			</table>
 		</ul></div>
-
+</form>
 		</div>
 
