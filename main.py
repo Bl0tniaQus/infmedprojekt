@@ -151,6 +151,7 @@ def wyslijaction():
 			iduser = dbCursor.fetchall()
 			if len(iduser)==0:
 				msg = msg + "Adresat o nazwie {} nie istnieje<br/>".format(user)
+				return render_template("wyslij.html",msg=msg)
 			else:
 				iduser = iduser[0]
 				dbCursor.execute('''INSERT INTO wiadomosc VALUES (default, %s, %s,%s,%s,%s,0,CURRENT_DATE,CURRENT_TIME,null) RETURNING id_wiadomosci''', (session['userid'], iduser, tytul, tresc,zal))
@@ -174,6 +175,7 @@ def wyslijaction():
 			public_key = bytes(result[0][1])
 			if len(result)==0:
 				msg = msg + "Adresat o nazwie {} nie istnieje<br/>".format(user)
+				return render_template("wyslij.html",msg=msg)
 			else:
 				aeskey = get_random_bytes(16)
 				iv = get_random_bytes(16)
@@ -210,6 +212,7 @@ def wyslijaction():
 				iduser = dbCursor.fetchall()[0]
 				if len(iduser)==0:
 					msg = msg + "Adresat o nazwie {} nie istnieje<br/>".format(user)
+					return render_template("wyslij.html",msg=msg)
 				else:
 					dbCursor.execute('''INSERT INTO wiadomosc VALUES (default, %s, %s,%s,%s,%s,2,CURRENT_DATE,CURRENT_TIME,%s) RETURNING id_wiadomosci''', (session['userid'], iduser, tytul, tresc,zal,iv))
 					idwiad = dbCursor.fetchall()[0]
@@ -260,7 +263,7 @@ def skrzynkanadawcza():
 		cleantmp(session['login'])
 	dbConnection = dbConnect()
 	dbCursor = dbConnection.cursor()
-	dbCursor.execute("SELECT id_wiadomosci,autor,adresat,tytul,tresc,zalacznik,szyfr,data_dodania,godzina_dodania,aesiv,aesrsa,nazwa_uzytkownika FROM wiadomosc INNER JOIN uzytkownik on id_uzytkownika=adresat WHERE adresat = '{}' ORDER BY data_dodania DESC,id_wiadomosci DESC;".format(session['userid']))
+	dbCursor.execute("SELECT id_wiadomosci,autor,adresat,tytul,tresc,zalacznik,szyfr,data_dodania,godzina_dodania,aesiv,aesrsa,nazwa_uzytkownika FROM wiadomosc INNER JOIN uzytkownik on id_uzytkownika=adresat WHERE autor = '{}' ORDER BY data_dodania DESC,id_wiadomosci DESC;".format(session['userid']))
 	wiadomosci = dbCursor.fetchall()
 	dbCursor.close()
 	dbConnection.close()
@@ -353,7 +356,7 @@ def wiadomoscaes():
 	msg=""
 	dbConnection = dbConnect()
 	dbCursor = dbConnection.cursor()
-	dbCursor.execute("SELECT id_wiadomosci,autor,adresat,tytul,tresc,zalacznik,szyfr,data_dodania,godzina_dodania,aesiv,nazwa_uzytkownika FROM wiadomosc INNER JOIN uzytkownik on id_uzytkownika=autor WHERE id_wiadomosci = '{}';".format(request.form['aes']))
+	dbCursor.execute("SELECT id_wiadomosci,autor,adresat,tytul,tresc,zalacznik,szyfr,data_dodania,godzina_dodania,aesiv,aesrsa,nazwa_uzytkownika FROM wiadomosc INNER JOIN uzytkownik on id_uzytkownika=autor WHERE id_wiadomosci = '{}';".format(request.form['aes']))
 	wiad = dbCursor.fetchall()
 	wiadomosc = []
 	dbCursor.execute("SELECT * from zalacznik WHERE id_wiadomosci = {}".format(request.form['aes']))
