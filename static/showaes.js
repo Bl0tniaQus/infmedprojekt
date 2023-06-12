@@ -12,7 +12,7 @@ window.onload = function()
 		}
 		
 		
-		},200)
+		},100)
 	
 	
 }
