@@ -1,6 +1,10 @@
 <link rel="stylesheet" href="../static/style.css">
+<a href="/"><img id="logomale" width="100"src="../static/logo.png"/></a>
+	
+	  <hr>
 {{msg}}
 Pobierz klucz prywatny RSA: 
 <form action="/downloadrsa" method="post">
 <button type="submit" value="{{filename}}" name="downloadrsa">Pobierz</button>
 </form>
+<p style="color:red;">UWAGA! Klucz prywatny RSA można pobrać tylko zaraz po rejestracji. Po opuszczeniu strony będzie to już niemożliwe</p>
