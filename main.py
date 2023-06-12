@@ -125,7 +125,7 @@ def wyslijaction():
 	adresat = request.form["adresat"]
 	adresaci = adresat.split()
 	szyfr = int(request.form["szyfr"])
-	tresc = request.form["tresc"]
+	tresc_oryginal = request.form["tresc"]
 	tytul = request.form["tytul"]
 	msg=""
 	zal=0
@@ -135,12 +135,13 @@ def wyslijaction():
 		dbConnection = dbConnect()
 		dbCursor = dbConnection.cursor()
 		for user in adresaci:
-			tresc = bytes(tresc, 'utf-8')
+			tresc = bytes(tresc_oryginal, 'utf-8')
 			dbCursor.execute("SELECT id_uzytkownika FROM uzytkownik WHERE nazwa_uzytkownika = '{}';".format(user))
-			iduser = dbCursor.fetchall()[0]
+			iduser = dbCursor.fetchall()
 			if len(iduser)==0:
-				msg = msg + "Adresat o nazwie {user} nie istnieje\n"
+				msg = msg + "Adresat o nazwie {} nie istnieje<br/>".format(user)
 			else:
+				iduser = iduser[0]
 				dbCursor.execute('''INSERT INTO wiadomosc VALUES (default, %s, %s,%s,%s,%s,0,CURRENT_DATE,null) RETURNING id_wiadomosci''', (session['userid'], iduser, tytul, tresc,zal))
 				idwiad = dbCursor.fetchall()[0]
 				if request.files['zalacznik'].filename!="":
@@ -160,12 +161,12 @@ def wyslijaction():
 			iduser = result[0][0]
 			public_key = bytes(result[0][1])
 			if len(result)==0:
-				msg = msg + "Adresat o nazwie {user} nie istnieje\n"
+				msg = msg + "Adresat o nazwie {} nie istnieje<br/>".format(user)
 			else:
 				aeskey = get_random_bytes(16)
 				iv = get_random_bytes(16)
 				aes = AES.new(aeskey, AES.MODE_CBC, iv)
-				tresc = aes.encrypt(pad(bytes(tresc,'utf-8'),16))
+				tresc = aes.encrypt(pad(bytes(tresc_oryginal,'utf-8'),16))
 				public_key = RSA.importKey(public_key)
 				cipher_rsa = PKCS1_OAEP.new(public_key)
 				aeskey2 = cipher_rsa.encrypt(aeskey)
@@ -190,12 +191,12 @@ def wyslijaction():
 			os.remove(app.config['UPLOAD_FOLDER'] + nazwa_pliku)
 			iv = get_random_bytes(16)
 			aes = AES.new(key, AES.MODE_CBC, iv)
-			tresc = aes.encrypt(pad(bytes(tresc,'utf-8'),16))
+			tresc_oryginal = aes.encrypt(pad(bytes(tresc,'utf-8'),16))
 			for user in adresaci:
 				dbCursor.execute("SELECT id_uzytkownika FROM uzytkownik WHERE nazwa_uzytkownika = '{}';".format(user))
 				iduser = dbCursor.fetchall()[0]
 				if len(iduser)==0:
-					msg = msg + "Adresat o nazwie {user} nie istnieje\n"
+					msg = msg + "Adresat o nazwie {} nie istnieje<br/>".format(user)
 				else:
 					dbCursor.execute('''INSERT INTO wiadomosc VALUES (default, %s, %s,%s,%s,%s,2,CURRENT_DATE,%s) RETURNING id_wiadomosci''', (session['userid'], iduser, tytul, tresc,zal,iv))
 					idwiad = dbCursor.fetchall()[0]
