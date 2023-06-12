@@ -16,27 +16,27 @@
 <td>Godzina: {{wiadomosc[8]}}</td>
 </tr>
 
-
+<p></p>
 
 
 {{msg}}
-<br />
+
 {% if wiadomosc[6]==0 %}
 <tr><td colspan="4" style="height:400px;vertical-align:top;padding:15px;text-align:left;">{{wiadomosc[4]}}</td></tr>
 	{% if zal[0]==1 %}
-	<tr><td colspan="4" style="border:none;"><p style="float:left;margin-right:20px;padding-top:10px;">Załącznik: {{zal[1]}}</p><form action="pobierz" method="post"><button  class="btn" type="submit" name="pobierz" value="{{wiadomosc[0]}}">Pobierz</button></form></td></tr>
+	<tr><td colspan="4" style="border:none;text-align:left;"><p style="float:left;margin-right:20px;padding-top:10px;">Załącznik: {{zal[1]}}</p><form action="pobierz" method="post"><button  class="btn" style="text-align:left;" type="submit" name="pobierz" value="{{wiadomosc[0]}}">Pobierz</button></form></td></tr>
 	{% endif %}
 {% elif wiadomosc[6]==1 and dec!=1%}
 </table>
 Wiadomość zabezpieczona algorytmem RSA
 Podaj swój klucz prywatny aby odczytać treść: 
 <form method="post" action="/wiadomoscrsa" enctype=multipart/form-data> 
-<input style="btn" type="file" name="rsakey"/><button  class="btn" type="submit" name="rsa" value="{{wiadomosc[0]}}">Prześlij</button>
+<input style="btn" type="file" name="rsakey"/><button  class="btn" style="text-align:left;" type="submit" name="rsa" value="{{wiadomosc[0]}}">Prześlij</button>
 </form>
 {% elif wiadomosc[6]==1 and dec==1%}
 <tr><td colspan="4" style="height:400px;vertical-align:top;padding:15px;text-align:left;">{{wiadomosc[4]}}</td></tr>
 {% if zal[0]==1 %}
-	<tr><td colspan="4" style="border:none;text-align:left;"><p style="float:left;margin-right:20px;padding-top:10px;">Załącznik: {{zal[1]}} <form action="pobierz" method="post"><button type="submit" class="btn" name="pobierz" value="{{wiadomosc[0]}}">Pobierz</button></form></td></tr>
+	<tr><td colspan="4" style="border:none;text-align:left;"><p style="float:left;margin-right:20px;padding-top:10px;">Załącznik: {{zal[1]}} <form action="pobierz"  method="post"><button type="submit" class="btn" style="text-align:left;"name="pobierz" value="{{wiadomosc[0]}}">Pobierz</button></form></td></tr>
 	{% endif %}
 {% elif wiadomosc[6]==2 and dec!=1%}
 Wiadomość zabezpieczona algorytmem AES
@@ -45,9 +45,10 @@ Podaj klucz adresata wiadomości aby odczytać treść
 <input style="btn" type="file" name="aeskey"/><button class="btn" type="submit" name="aes" value="{{wiadomosc[0]}}">Prześlij</button>
 </form>
 {% elif wiadomosc[6]==2 and dec==1%}
-{% if zal[0]==1 %}
-	<tr><td colspan="4" style="border:none;"><p style="float:left;margin-right:20px;padding-top:10px; ">Załącznik: {{zal[1]}} <form action="pobierz" method="post"><button type="submit" class="btn" name="pobierz" value="{{wiadomosc[0]}}">Pobierz</button></form></td></tr>
-	{% endif %}
 <tr><td colspan="4" style="height:400px;vertical-align:top;padding:15px;text-align:left;">{{wiadomosc[4]}}</td></tr>
+
+{% if zal[0]==1 %}
+	<tr><td colspan="4" style="border:none;text-align:left;"><p style="float:left;margin-right:20px;padding-top:10px; ">Załącznik: {{zal[1]}} <form action="pobierz"style="text-align:left;" method="post"><button type="submit" class="btn" name="pobierz" value="{{wiadomosc[0]}}">Pobierz</button></form></td></tr>
+	{% endif %}
 {% endif %}
 </table>
