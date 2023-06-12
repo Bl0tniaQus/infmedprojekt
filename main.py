@@ -24,8 +24,8 @@ def usunwiad(idwiad):
 	users = dbCursor.fetchall()
 	if len(users)!=0:
 		if users[0][0]==session['userid'] or users[0][1]==session['userid']:
-			dbCursor.execute("DELETE FROM wiadomosc WHERE id_wiadomosci = '{}';".format(idwiad))
 			dbCursor.execute("DELETE FROM zalacznik WHERE id_wiadomosci = '{}';".format(idwiad))
+			dbCursor.execute("DELETE FROM wiadomosc WHERE id_wiadomosci = '{}';".format(idwiad))
 			dbConnection.commit()
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = "./tmp/"
