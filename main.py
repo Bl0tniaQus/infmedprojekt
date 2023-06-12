@@ -248,6 +248,7 @@ def wiadomosc():
 	dbCursor.execute("SELECT * from zalacznik WHERE id_wiadomosci = {}".format(request.form['wiadomosc']))
 	zal = dbCursor.fetchall()
 	wiadomosc = []
+	zalacznik = []
 	for x in wiad[0]:
 		wiadomosc.append(x)
 	if wiadomosc[2]!=session['userid']:
@@ -279,8 +280,6 @@ def wiadomoscrsa():
 	zalacznik = []
 	for x in wiad[0]:
 		wiadomosc.append(x)
-	for x in zal[0]:
-		zalacznik.append(x)
 	if wiadomosc[2]!=session['userid']:
 		return redirect("/")
 	if wiadomosc[6]==1:
