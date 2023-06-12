@@ -1,8 +1,22 @@
-<div><ul>
-<form method="post" action="/wiadomosc">
+<link rel="stylesheet" href="../static/style.css">
+<img id="logomale" width="100" src="../static/logo.png"/>
+	<ul>
+	  <li><a href="/profil">{{session['login']}}</a></li>
+	  <li><a href="/skrzynkaodbiorcza">skrzynka odbiorcza</a></li>
+	  <li><a href="/wyslij">wyslij maila</a></li>
+	  <li><a href="/wyloguj">wyloguj</a></li>
+	</ul>
+	  <hr>
+<div>
+<form method="post" action="/wiadomosc" style="">
+		<ul class="listawiadomosci">
+			<table class="tabelawiadomosci">
+				<tr style="background-color:#0b2a80;color:#e1e8fc;"><td  class="td1">Temat maila</td><td class="td2">Data odbioru</td><td class="td3">Nadawca</td></tr>
 			{% for i in range(dl) %}
-				<li id="wiadomosc_{{wiadomosci[i][0]}}">{{wiadomosci[i][3]}} {{wiadomosci[i][7]}} {{wiadomosci[i][10]}}<button type="submit" value="{{wiadomosci[i][0]}}" name="wiadomosc">Podgląd</button></li>
+			
+				<li id="wiadomosc_{{wiadomosci[i][0]}}"><tr><td  class="td1">{{wiadomosci[i][3]}}</td><td class="td2">{{wiadomosci[i][7]}} </td> <td class="td3">{{wiadomosci[i][10]}}</td> <td class="td4"><button class="buttonmini" type="submit" value="{{wiadomosci[i][0]}}" name="wiadomosc">Podgląd</button></td></tr></li>
 			{% endfor %}
+			</table>
 		</ul></div>
 </form>
 		</div>
