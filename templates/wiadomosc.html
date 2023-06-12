@@ -1,0 +1,45 @@
+<link rel="stylesheet" href="../static/style.css">
+<img id="logomale" width="100" src="../static/logo.png"/>
+	<ul>
+	  <li><a href="/profil">{{session['login']}}</a></li>
+	  <li><a href="/skrzynkaodbiorcza">skrzynka odbiorcza</a></li>
+	  <li><a href="/wyslij">wyslij maila</a></li>
+	  <li><a href="/wyloguj">wyloguj</a></li>
+	</ul>
+	  <hr>
+Od: {{wiadomosc[10]}}</br>
+Tytuł: {{wiadomosc[3]}}</br>
+Data: {{wiadomosc[7]}}</br>
+
+<br/>
+{{msg}}
+<br />
+
+{% if wiadomosc[6]==0 %}
+{{wiadomosc[4]}}
+	{% if zal[0]==1 %}
+	Załącznik: {{zal[1]}} <form action="pobierz" method="post"><button type="submit" name="pobierz" value="{{wiadomosc[0]}}">Pobierz</button></form>
+	{% endif %}
+{% elif wiadomosc[6]==1 and dec!=1%}
+Wiadomość zabezpieczona algorytmem RSA
+Podaj swój klucz prywatny aby odczytać treść: 
+<form method="post" action="/wiadomoscrsa" enctype=multipart/form-data> 
+<input type="file" name="rsakey"/><button type="submit" name="rsa" value="{{wiadomosc[0]}}">Prześlij</button>
+</form>
+{% elif wiadomosc[6]==1 and dec==1%}
+{{wiadomosc[4]}}
+{% if zal[0]==1 %}
+	Załącznik: {{zal[1]}} <form action="pobierz" method="post"><button type="submit" name="pobierz" value="{{wiadomosc[0]}}">Pobierz</button></form>
+	{% endif %}
+{% elif wiadomosc[6]==2 and dec!=1%}
+Wiadomość zabezpieczona algorytmem AES
+Podaj klucz adresata wiadomości aby odczytać treść
+<form method="post" action="/wiadomoscaes" enctype=multipart/form-data> 
+<input type="file" name="aeskey"/><button type="submit" name="aes" value="{{wiadomosc[0]}}">Prześlij</button>
+</form>
+{% elif wiadomosc[6]==2 and dec==1%}
+{% if zal[0]==1 %}
+	Załącznik: {{zal[1]}} <form action="pobierz" method="post"><button type="submit" name="pobierz" value="{{wiadomosc[0]}}">Pobierz</button></form>
+	{% endif %}
+{{wiadomosc[4]}}
+{% endif %}
