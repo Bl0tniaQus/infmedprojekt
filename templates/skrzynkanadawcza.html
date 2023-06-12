@@ -11,9 +11,9 @@
 
 		<ul class="listawiadomosci">
 			<table class="tabelawiadomosci">
-				<tr style="background-color:#0b2a80;color:#e1e8fc;"><td  class="td1">Temat maila</td><td class="td2">Data odbioru</td><td class="td3">Nadawca</td></tr>
+				<tr style="background-color:#0b2a80;color:#e1e8fc;"><td  class="td1">Temat maila</td><td class="td2">Data odbioru</td><td class="td3">Odbiorca</td></tr>
 			{% for i in range(dl) %}	
-				<li id="wiadomosc_{{wiadomosci[i][0]}}"><tr><td  class="td1">{{wiadomosci[i][3]}}</td><td class="td2">{{wiadomosci[i][7]}} </td> <td class="td3">{{wiadomosci[i][10]}}</td>
+				<li id="wiadomosc_{{wiadomosci[i][0]}}"><tr><td  class="td1">{{wiadomosci[i][3]}}</td><td class="td2">{{wiadomosci[i][7]}} </td> <td class="td3">{{wiadomosci[i][11]}}</td>
 			    </tr></li>
 					
 					<form method="post" action="/usunnad" style="">
