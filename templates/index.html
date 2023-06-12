@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+
+<head>
+		<link rel="stylesheet" href="../static/style.css">
+
+</head>
+<body>
+
+
+	
+ {% if session['login'] %}
+ 
+		<img id="logomale" width="100" src="../static/logo.png"/>
+	<ul>
+	  <li><a href="/profil">{{session['login']}}</a></li>
+	  <li><a href="/skrzynkaodbiorcza">skrzynka odbiorcza</a></li>
+	  <li><a href="/wyslij">wyslij maila</a></li>
+	  <li><a href="/wyloguj">wyloguj</a></li>
+	</ul>
+	  <hr>
+	  
+	  {% else %}<img id="logo" width="200" src="../static/logo.png"/><div class="glownaZR">
+		  <p>Zaloguj się, aby móc wysyłać maile</p>
+	  <a href="/logowanie" class="wybor"><li>Zaloguj się</li></a>
+	  <a href="/rejestracja" class="wybor"><li>Rejestracja</li></a>
+	  </div>
+	  {% endif %}
+
+
+</body>
+</html>
