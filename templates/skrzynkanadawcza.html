@@ -13,10 +13,19 @@
 <form method="post" action="/usunnad" style="">
 		<ul class="listawiadomosci" style="padding-top:0;">
 			<table class="tabelawiadomosci">
-				<tr style="background-color:#0b2a80;color:#e1e8fc;"><td  class="td1">Temat maila</td><td class="td2">Data odbioru</td><td class="td3">Nadawca</td><td class="td3">Godzina</td><td class="td3">Szyfrowanie</td><td>Załącznik</td></tr>
+				<tr style="background-color:#0b2a80;color:#e1e8fc;"><td  class="td1">Temat maila</td><td class="td2">Data odbioru</td><td class="td3">Odbiorca</td></tr>
 			{% for i in range(dl) %}	
-				<li id="wiadomosc_{{wiadomosci[i][0]}}"><tr><td  class="td1">{{wiadomosci[i][3]}}</td><td class="td2">{{wiadomosci[i][7]}} </td> <td class="td3">{{wiadomosci[i][10]}}</td><td class="td5">{{wiadomosci[i][8]}}</td><td class="td5">{% if wiadomosci[i][6] ==1 %} RSA {% elif wiadomosci[i][6]==2 %} AES {% endif %} </td><td class="td6">{% if wiadomosci[i][5]==1 %} Tak {% endif %}</td><td class="td4"><button class="buttonmini" type="submit" value="{{wiadomosci[i][0]}}" name="wiadomosc">Usuń</button></td>
-			    </tr></li>			
+				<li id="wiadomosc_{{wiadomosci[i][0]}}"><tr><td  class="td1">{{wiadomosci[i][3]}}</td><td class="td2">{{wiadomosci[i][7]}} </td> <td class="td3">{{wiadomosci[i][11]}}</td>
+			    </tr></li>
+					
+					<form method="post" action="/usunnad" style="">
+					<button class="buttonmini" type="submit" value="{{wiadomosci[i][0]}}" name="wiadomosc">Usuń</button>
+					</form>
+			Godzina: {{wiadomosci[i][8]}}<br/>
+			Szyfr: {% if wiadomosci[i][6] ==1 %} RSA {% elif wiadomosci[i][6]==2 %} AES {% endif %} 
+			Załącznik: {% if wiadomosci[i][5]==1 %} Tak {% endif %}
+			
+					
 			{% endfor %}
 			
 			</table>

@@ -15,7 +15,7 @@
 			<table class="tabelawiadomosci">
 				<tr style="background-color:#0b2a80;color:#e1e8fc;"><td  class="td1">Temat maila</td><td class="td2">Data odbioru</td><td class="td3">Nadawca</td></tr>
 			{% for i in range(dl) %}	
-				<li id="wiadomosc_{{wiadomosci[i][0]}}"><tr><td  class="td1">{{wiadomosci[i][3]}}</td><td class="td2">{{wiadomosci[i][7]}} </td> <td class="td3">{{wiadomosci[i][10]}}</td>
+				<li id="wiadomosc_{{wiadomosci[i][0]}}"><tr><td  class="td1">{{wiadomosci[i][3]}}</td><td class="td2">{{wiadomosci[i][7]}} </td> <td class="td3">{{wiadomosci[i][11]}}</td>
 			    <td class="td4">
 					<form method="post" action="/wiadomosc" style="">
 					<button class="buttonmini" type="submit" value="{{wiadomosci[i][0]}}" name="wiadomosc">Podgląd</button>
@@ -25,7 +25,7 @@
 					<form method="post" action="/usunodb" style="">
 					<button class="buttonmini" type="submit" value="{{wiadomosci[i][0]}}" name="wiadomosc">Usuń</button>
 					</form>
-					Godzina: {{wiadomosc[8]}}<br/>
+					Godzina: {{wiadomosci[i][8]}}<br/>
 			{% endfor %}
 			</table>
 		</ul></div>
