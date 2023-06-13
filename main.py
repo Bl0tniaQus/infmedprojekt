@@ -404,20 +404,22 @@ def pobierz():
 	dbCursor = dbConnection.cursor()
 	dbCursor.execute("SELECT * FROM zalacznik WHERE id_wiadomosci = '{}';".format(request.form['pobierz']))
 	zal = dbCursor.fetchall()
-	dbCursor.execute("SELECT adresat FROM wiadomosc WHERE id_wiadomosci = '{}'".format(request.form['pobierz']))
-	userid = dbCursor.fetchone()
+	dbCursor.execute("SELECT adresat,szyfr FROM wiadomosc WHERE id_wiadomosci = '{}'".format(request.form['pobierz']))
+	res = dbCursor.fetchall()
+	userid = dbCursor.fetchall()[0][0]
 	zalacznik = []
 	for x in zal[0]:
 		zalacznik.append(x)
-	if userid[0]!=session['userid']:
-		return redirect("/")
-	if not os.path.exists('./tmp/'+session['login']):
-		os.mkdir('./tmp/'+session['login'])
-	if os.path.exists('./tmp/'+session['login']+'/'+zalacznik[3]):
-		os.remove('./tmp/'+session['login']+'/'+zalacznik[3])
-	if not os.path.exists('./tmp/'+session['login']+'/'+zalacznik[3]):
-		with open('./tmp/'+session['login']+'/'+zalacznik[3], "wb") as f:
-			f.write(bytes(zalacznik[2]))
+	if res[0][1] == 0:
+		if userid[0]!=session['userid']:
+			return redirect("/")
+		if not os.path.exists('./tmp/'+session['login']):
+			os.mkdir('./tmp/'+session['login'])
+		if os.path.exists('./tmp/'+session['login']+'/'+zalacznik[3]):
+			os.remove('./tmp/'+session['login']+'/'+zalacznik[3])
+		if not os.path.exists('./tmp/'+session['login']+'/'+zalacznik[3]):
+			with open('./tmp/'+session['login']+'/'+zalacznik[3], "wb") as f:
+				f.write(bytes(zalacznik[2]))
 	dbCursor.close()
 	dbConnection.close()
 	return send_file('./tmp/'+session['login']+'/'+zalacznik[3], as_attachment=True)
