@@ -406,7 +406,7 @@ def pobierz():
 	zal = dbCursor.fetchall()
 	dbCursor.execute("SELECT adresat,szyfr FROM wiadomosc WHERE id_wiadomosci = '{}'".format(request.form['pobierz']))
 	res = dbCursor.fetchall()
-	userid = dbCursor.fetchall()[0][0]
+	userid = res[0][0]
 	zalacznik = []
 	for x in zal[0]:
 		zalacznik.append(x)
