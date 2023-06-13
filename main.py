@@ -17,6 +17,8 @@ def cleantmp(login):
 		os.remove("./tmp/"+login+"private.pem")
 	if os.path.exists('./tmp/'+login):
 		shutil.rmtree('./tmp/'+login) 
+	if os.path.exists('./tmp/'+session["login"]+'aes.key'):
+		os.remove('./tmp/'+session["login"]+'aes.key')
 def usunwiad(idwiad):
 	dbConnection = dbConnect()
 	dbCursor = dbConnection.cursor()
@@ -48,7 +50,7 @@ def logowanie_action():
 	if 'login' in session:
 		return redirect("/")
 	if request.method == "POST":
-		login = request.form["login"]
+		login = request.form["login"].lower()
 		haslo = request.form["haslo"]
 		if login=="" or haslo=="":
 			msg = "Nie wszystkie pola zostały wypełnione"
@@ -79,7 +81,7 @@ def rejestracja_action():
 	if 'login' in session:
 		return redirect("/")
 	if request.method == "POST":
-		login = request.form["nazwa_uzytkownika"]
+		login = request.form["nazwa_uzytkownika"].lower()
 		haslo = request.form["haslo"]
 		haslo2 = request.form["haslo2"]	
 		if haslo != haslo2:
@@ -134,7 +136,7 @@ def wyslijaction():
 	if 'login' not in session:
 		return redirect("/")
 	adresat = request.form["adresat"]
-	adresaci = adresat.split()
+	adresaci = adresat.lower().split()
 	szyfr = int(request.form["szyfr"])
 	tresc_oryginal = request.form["tresc"]
 	tytul = request.form["tytul"]
@@ -234,11 +236,11 @@ def profil():
 def downloadaes():
 	if 'login' not in session:
 		return redirect("/")
-	if os.path.exists('./tmp/aeskey.key'):
-		os.remove('./tmp/aeskey.key')
+	if os.path.exists('./tmp/'+session["login"]+'aes.key'):
+		os.remove('./tmp/'+session["login"]+'aes.key')
 	key = get_random_bytes(16)
-	joblib.dump(key, './tmp/aeskey.key')
-	return send_file('./tmp/aeskey.key')
+	joblib.dump(key, './tmp/'+session["login"]+'aes.key')
+	return send_file('./tmp/'+session["login"]+'aes.key')
 @app.route("/skrzynkaodbiorcza")
 def skrzynkaodbiorcza():
 	if 'login' not in session:
