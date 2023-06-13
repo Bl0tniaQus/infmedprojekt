@@ -39,6 +39,7 @@ Podaj swój klucz prywatny aby odczytać treść:
 	<tr><td colspan="4" style="border:none;text-align:left;"><p style="float:left;margin-right:20px;padding-top:10px;">Załącznik: {{zal[1]}} <form action="pobierz"  method="post"><button type="submit" class="btn" style="text-align:left;"name="pobierz" value="{{wiadomosc[0]}}">Pobierz</button></form></td></tr>
 	{% endif %}
 {% elif wiadomosc[6]==2 and dec!=1%}
+</table>
 Wiadomość zabezpieczona algorytmem AES
 Podaj klucz adresata wiadomości aby odczytać treść
 <form method="post" action="/wiadomoscaes" enctype=multipart/form-data> 
