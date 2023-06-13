@@ -1,7 +1,7 @@
 <link rel="stylesheet" href="../static/style.css">
 <a href="/"><img id="logomale" width="100" src="../static/logo.png"/></a>
 	<ul>
-	  <li><a href="/profil">{{session['login']}}</a></li>
+	  <li><a href="/profil"><b>{{session['login']}}</b></a></li>
 	  <li><a href="/skrzynkaodbiorcza">skrzynka odbiorcza</a></li>
 	  <li><a href="/skrzynkanadawcza">Skrzynka nadawcza</a></li>
 	  <li><a href="/wyslij">wyslij maila</a></li>
@@ -11,8 +11,8 @@
 <p>{{msg|safe}}</p>
 <form class="formwyslij"action="wyslijaction" method="post" enctype="multipart/form-data">
 	<table>
-	<tr><td style="width:100px;border:none;">Adresaci: </td><td style="border:none;"><input class="inputwysylania" type="text" name="adresat"/></td>
-	<tr><td style="width:100px;;border:none;">Tytuł: </td><td style="border:none;"><input class="inputwysylania" type="text" name="tytul"/></td>
+	<tr><td style="width:100px;border:none;">Adresaci: </td><td style="border:none;"><input class="inputwysylania" type="text" name="adresat" required/></td>
+	<tr><td style="width:100px;;border:none;">Tytuł: </td><td style="border:none;"><input class="inputwysylania" type="text" name="tytul" required/></td>
 	</table>Szyfrowanie: <input type="radio" name="szyfr" value="0" checked="checked">Brak
 	 <input type="radio" name="szyfr" value="1">RSA 
 	 <input type="radio" name="szyfr" value="2" id="aes">AES
