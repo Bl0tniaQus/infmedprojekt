@@ -170,13 +170,12 @@ def wyslijaction():
 		for user in adresaci:
 			dbCursor.execute("SELECT id_uzytkownika,klucz_publiczny FROM uzytkownik WHERE nazwa_uzytkownika = '{}';".format(user))
 			result = dbCursor.fetchall()
-			print(result)
-			iduser = result[0][0]
 			public_key = bytes(result[0][1])
 			if len(result)==0:
 				msg = msg + "Adresat o nazwie {} nie istnieje<br/>".format(user)
 				return render_template("wyslij.html",msg=msg)
 			else:
+				iduser = result[0]
 				aeskey = get_random_bytes(16)
 				iv = get_random_bytes(16)
 				aes = AES.new(aeskey, AES.MODE_CBC, iv)
