@@ -1,3 +1,4 @@
+ 
 from flask import Flask, render_template, session, request, redirect, url_for,send_file
 from flask_session import Session
 from Crypto.Cipher import AES, PKCS1_OAEP
@@ -17,6 +18,8 @@ def cleantmp(login):
 		os.remove("./tmp/"+login+"private.pem")
 	if os.path.exists('./tmp/'+login):
 		shutil.rmtree('./tmp/'+login) 
+	if os.path.exists('./tmp/'+session["login"]+'aes.key'):
+		os.remove('./tmp/'+session["login"]+'aes.key')
 def usunwiad(idwiad):
 	dbConnection = dbConnect()
 	dbCursor = dbConnection.cursor()
@@ -48,7 +51,7 @@ def logowanie_action():
 	if 'login' in session:
 		return redirect("/")
 	if request.method == "POST":
-		login = request.form["login"]
+		login = request.form["login"].lower()
 		haslo = request.form["haslo"]
 		if login=="" or haslo=="":
 			msg = "Nie wszystkie pola zostały wypełnione"
@@ -79,7 +82,7 @@ def rejestracja_action():
 	if 'login' in session:
 		return redirect("/")
 	if request.method == "POST":
-		login = request.form["nazwa_uzytkownika"]
+		login = request.form["nazwa_uzytkownika"].lower()
 		haslo = request.form["haslo"]
 		haslo2 = request.form["haslo2"]	
 		if haslo != haslo2:
@@ -134,7 +137,7 @@ def wyslijaction():
 	if 'login' not in session:
 		return redirect("/")
 	adresat = request.form["adresat"]
-	adresaci = adresat.split()
+	adresaci = adresat.lower().split()
 	szyfr = int(request.form["szyfr"])
 	tresc_oryginal = request.form["tresc"]
 	tytul = request.form["tytul"]
@@ -151,7 +154,6 @@ def wyslijaction():
 			iduser = dbCursor.fetchall()
 			if len(iduser)==0:
 				msg = msg + "Adresat o nazwie {} nie istnieje<br/>".format(user)
-				return render_template("wyslij.html",msg=msg)
 			else:
 				iduser = iduser[0]
 				dbCursor.execute('''INSERT INTO wiadomosc VALUES (default, %s, %s,%s,%s,%s,0,CURRENT_DATE,CURRENT_TIME,null) RETURNING id_wiadomosci''', (session['userid'], iduser, tytul, tresc,zal))
@@ -175,7 +177,6 @@ def wyslijaction():
 			public_key = bytes(result[0][1])
 			if len(result)==0:
 				msg = msg + "Adresat o nazwie {} nie istnieje<br/>".format(user)
-				return render_template("wyslij.html",msg=msg)
 			else:
 				aeskey = get_random_bytes(16)
 				iv = get_random_bytes(16)
@@ -212,7 +213,6 @@ def wyslijaction():
 				iduser = dbCursor.fetchall()[0]
 				if len(iduser)==0:
 					msg = msg + "Adresat o nazwie {} nie istnieje<br/>".format(user)
-					return render_template("wyslij.html",msg=msg)
 				else:
 					dbCursor.execute('''INSERT INTO wiadomosc VALUES (default, %s, %s,%s,%s,%s,2,CURRENT_DATE,CURRENT_TIME,%s) RETURNING id_wiadomosci''', (session['userid'], iduser, tytul, tresc,zal,iv))
 					idwiad = dbCursor.fetchall()[0]
@@ -237,11 +237,11 @@ def profil():
 def downloadaes():
 	if 'login' not in session:
 		return redirect("/")
-	if os.path.exists('./tmp/aeskey.key'):
-		os.remove('./tmp/aeskey.key')
+	if os.path.exists('./tmp/'+session["login"]+'aes.key'):
+		os.remove('./tmp/'+session["login"]+'aes.key')
 	key = get_random_bytes(16)
-	joblib.dump(key, './tmp/aeskey.key')
-	return send_file('./tmp/aeskey.key')
+	joblib.dump(key, './tmp/'+session["login"]+'aes.key')
+	return send_file('./tmp/'+session["login"]+'aes.key')
 @app.route("/skrzynkaodbiorcza")
 def skrzynkaodbiorcza():
 	if 'login' not in session:
@@ -263,7 +263,7 @@ def skrzynkanadawcza():
 		cleantmp(session['login'])
 	dbConnection = dbConnect()
 	dbCursor = dbConnection.cursor()
-	dbCursor.execute("SELECT id_wiadomosci,autor,adresat,tytul,tresc,zalacznik,szyfr,data_dodania,godzina_dodania,aesiv,aesrsa,nazwa_uzytkownika FROM wiadomosc INNER JOIN uzytkownik on id_uzytkownika=adresat WHERE autor = '{}' ORDER BY data_dodania DESC,id_wiadomosci DESC;".format(session['userid']))
+	dbCursor.execute("SELECT id_wiadomosci,autor,adresat,tytul,tresc,zalacznik,szyfr,data_dodania,godzina_dodania,aesiv,aesrsa,nazwa_uzytkownika FROM wiadomosc INNER JOIN uzytkownik on id_uzytkownika=adresat WHERE adresat = '{}' ORDER BY data_dodania DESC,id_wiadomosci DESC;".format(session['userid']))
 	wiadomosci = dbCursor.fetchall()
 	dbCursor.close()
 	dbConnection.close()
@@ -356,7 +356,7 @@ def wiadomoscaes():
 	msg=""
 	dbConnection = dbConnect()
 	dbCursor = dbConnection.cursor()
-	dbCursor.execute("SELECT id_wiadomosci,autor,adresat,tytul,tresc,zalacznik,szyfr,data_dodania,godzina_dodania,aesiv,aesrsa,nazwa_uzytkownika FROM wiadomosc INNER JOIN uzytkownik on id_uzytkownika=autor WHERE id_wiadomosci = '{}';".format(request.form['aes']))
+	dbCursor.execute("SELECT id_wiadomosci,autor,adresat,tytul,tresc,zalacznik,szyfr,data_dodania,godzina_dodania,aesiv,nazwa_uzytkownika FROM wiadomosc INNER JOIN uzytkownik on id_uzytkownika=autor WHERE id_wiadomosci = '{}';".format(request.form['aes']))
 	wiad = dbCursor.fetchall()
 	wiadomosc = []
 	dbCursor.execute("SELECT * from zalacznik WHERE id_wiadomosci = {}".format(request.form['aes']))
