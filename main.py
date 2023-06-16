@@ -36,6 +36,9 @@ app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
+if not os.path.exists("./tmp"):
+	os.makedirs("./tmp")
+
 @app.route('/')
 def index():
 	if 'login' in session:
@@ -263,7 +266,7 @@ def skrzynkanadawcza():
 		cleantmp(session['login'])
 	dbConnection = dbConnect()
 	dbCursor = dbConnection.cursor()
-	dbCursor.execute("SELECT id_wiadomosci,autor,adresat,tytul,tresc,zalacznik,szyfr,data_dodania,godzina_dodania,aesiv,aesrsa,nazwa_uzytkownika FROM wiadomosc INNER JOIN uzytkownik on id_uzytkownika=adresat WHERE adresat = '{}' ORDER BY data_dodania DESC,id_wiadomosci DESC;".format(session['userid']))
+	dbCursor.execute("SELECT id_wiadomosci,autor,adresat,tytul,tresc,zalacznik,szyfr,data_dodania,godzina_dodania,aesiv,aesrsa,nazwa_uzytkownika FROM wiadomosc INNER JOIN uzytkownik on id_uzytkownika=adresat WHERE autor = '{}' ORDER BY data_dodania DESC,id_wiadomosci DESC;".format(session['userid']))
 	wiadomosci = dbCursor.fetchall()
 	dbCursor.close()
 	dbConnection.close()
