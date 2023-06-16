@@ -359,7 +359,7 @@ def wiadomoscaes():
 	msg=""
 	dbConnection = dbConnect()
 	dbCursor = dbConnection.cursor()
-	dbCursor.execute("SELECT id_wiadomosci,autor,adresat,tytul,tresc,zalacznik,szyfr,data_dodania,godzina_dodania,aesiv,nazwa_uzytkownika FROM wiadomosc INNER JOIN uzytkownik on id_uzytkownika=autor WHERE id_wiadomosci = '{}';".format(request.form['aes']))
+	dbCursor.execute("SELECT id_wiadomosci,autor,adresat,tytul,tresc,zalacznik,szyfr,data_dodania,godzina_dodania,aesiv,aesrsa,nazwa_uzytkownika FROM wiadomosc INNER JOIN uzytkownik on id_uzytkownika=autor WHERE id_wiadomosci = '{}';".format(request.form['aes']))
 	wiad = dbCursor.fetchall()
 	wiadomosc = []
 	dbCursor.execute("SELECT * from zalacznik WHERE id_wiadomosci = {}".format(request.form['aes']))
