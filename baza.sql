@@ -16,7 +16,7 @@ CREATE TABLE wiadomosc (
 	adresat integer not null,
 	tytul varchar(128) not null,
 	tresc bytea not null,
-	zalacznik integer,
+	zalacznik integer not null,
 	szyfr integer not null,
     data_dodania DATE NOT NULL,
 	godzina_dodania TIME(0) NOT NULL,
